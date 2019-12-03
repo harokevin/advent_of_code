@@ -41,22 +41,42 @@ const eq = (array1, array2) => {
     array1.every((e, index) => e === array2[index]);
 }
 
-console.log(`example_input_1: ${eq(run(IntcodePrograms.example_input_1), IntcodePrograms.expected_output_1) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_1)}] == [${IntcodePrograms.expected_output_1}]\n`);
+// console.log(`example_input_1: ${eq(run(IntcodePrograms.example_input_1), IntcodePrograms.expected_output_1) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_1)}] == [${IntcodePrograms.expected_output_1}]\n`);
 
-console.log(`example_input_2: ${eq(run(IntcodePrograms.example_input_2), IntcodePrograms.expected_output_2) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_2)}] == [${IntcodePrograms.expected_output_2}]\n`);
+// console.log(`example_input_2: ${eq(run(IntcodePrograms.example_input_2), IntcodePrograms.expected_output_2) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_2)}] == [${IntcodePrograms.expected_output_2}]\n`);
 
-console.log(`example_input_3: ${eq(run(IntcodePrograms.example_input_3), IntcodePrograms.expected_output_3) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_3)}] == [${IntcodePrograms.expected_output_3}]\n`);
+// console.log(`example_input_3: ${eq(run(IntcodePrograms.example_input_3), IntcodePrograms.expected_output_3) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_3)}] == [${IntcodePrograms.expected_output_3}]\n`);
 
-console.log(`example_input_4: ${eq(run(IntcodePrograms.example_input_4), IntcodePrograms.expected_output_4) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_4)}] == [${IntcodePrograms.expected_output_4}]\n`);
+// console.log(`example_input_4: ${eq(run(IntcodePrograms.example_input_4), IntcodePrograms.expected_output_4) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_4)}] == [${IntcodePrograms.expected_output_4}]\n`);
 
-console.log(`example_input_5: ${eq(run(IntcodePrograms.example_input_5), IntcodePrograms.expected_output_5) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_5)}] == [${IntcodePrograms.expected_output_5}]\n`);
+// console.log(`example_input_5: ${eq(run(IntcodePrograms.example_input_5), IntcodePrograms.expected_output_5) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_5)}] == [${IntcodePrograms.expected_output_5}]\n`);
 
-console.log(`example_input_6: ${eq(run(IntcodePrograms.example_input_6), IntcodePrograms.expected_output_6) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_6)}] == [${IntcodePrograms.expected_output_6}]\n`);
+// console.log(`example_input_6: ${eq(run(IntcodePrograms.example_input_6), IntcodePrograms.expected_output_6) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_6)}] == [${IntcodePrograms.expected_output_6}]\n`);
 
-console.log(`Input: [${run(IntcodePrograms.modifiedInput)}]`);
+// console.log(`Input: [${run(IntcodePrograms.modifiedInput)}]`);
+
+const getInputGivenOutput = (output) => {
+  var answer = undefined;
+  var programCopy = [...IntcodePrograms.input];
+
+  for (let noun = 0; noun <= 99; noun++) {
+    for (let verb = 0; verb <= 99; verb++) {
+      programCopy[1] = noun;
+      programCopy[2] = verb;
+      answer = run(programCopy)[0];
+
+      if (answer == output) {
+        return {noun, verb, output, answer: 100 * noun + verb};
+      }
+    }
+  }
+  return "No combination of noun and verb produces this output for this program"
+}
+
+console.log(getInputGivenOutput(19690720));
