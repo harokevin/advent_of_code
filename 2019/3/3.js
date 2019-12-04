@@ -35,12 +35,30 @@ const generateSegments = (path) => {
       x1: previousPoint.x1,
       y1: previousPoint.y1,
       x2: nextPoint.x1,
-      y2: nextPoint.y1
+      y2: nextPoint.y1,
+      move
     };
     previousPoint = nextPoint;
     return result;
   });
 };
+
+const isPointOnSegment = (point, segment) => {
+  const crossproduct = (point.y - segment.y1) * (segment.x2 - segment.x1) - (point.x - segment.x1) * (segment.y2 - segment.y1)
+
+  if (Math.abs(crossproduct) != 0)
+      return false;
+
+  const dotproduct = (point.x - segment.x1) * (segment.x2 - segment.x1) + (point.y - segment.y1)*(segment.y2 - segment.y1)
+  if (dotproduct < 0)
+      return false;
+
+  const squaredlengthba = (segment.x2 - segment.x1)*(segment.x2 - segment.x1) + (segment.y2 - segment.y1)*(segment.y2 - segment.y1)
+  if (dotproduct > squaredlengthba)
+      return false;
+
+  return true
+}
 
 const segmentsIntersect = (segment1, segment2) => {
   const x1 = segment1.x1;
@@ -94,6 +112,29 @@ const distanceToOrigin = (point) => {
   return Math.abs(origin.x1 - x1) + Math.abs(origin.y1 - y1);
 }
 
+const distanceBetweenPoints = (point1, point2) => {
+  return Math.abs(point1.x1 - point2.x) + Math.abs(point1.y1 - point2.y);
+}
+
+const walkTo = (intersection, wire) => {
+
+  //get segments for each line
+  const wireSegemnts = generateSegments(wire);
+  let steps = 0;
+  const origin = {x1: 0, y1: 0};
+  let currentPosition = origin;
+  for (const segment in wireSegemnts) {
+    if (!isPointOnSegment(intersection, wireSegemnts[segment])){
+      steps += wireSegemnts[segment].move.movement;
+      currentPosition = {x1: wireSegemnts[segment].x2, y1: wireSegemnts[segment].y2};
+    } else {
+      steps += distanceBetweenPoints({x1: wireSegemnts[segment].x1, y1: wireSegemnts[segment].y1}, intersection);
+      return steps;
+    }
+  };
+  return steps;
+}
+
 const run = (wire1, wire2) => {
 
   //get segments for each line
@@ -123,8 +164,24 @@ const run = (wire1, wire2) => {
   });
 
   //calulate the distance between the starting point and the intersection for all intersections
-  const distances = intersections.map(intersection => {
-    return distanceToOrigin(intersection);
+  // const distances = intersections.map(intersection => {
+  //   return distanceToOrigin(intersection);
+  // });
+
+  //calulate the number of steps to each intersection, for each wire
+  const walks = intersections.map(intersection => {
+    const wire1Walk = walkTo(intersection, wire1);
+    const wire2Walk = walkTo(intersection, wire2);
+    return {
+      intersection,
+      wire1Walk,
+      wire2Walk,
+      sum: wire1Walk + wire2Walk
+    };
+  });
+
+  const distances = walks.map(walk => {
+    return walk.sum;
   });
 
   //return the smallest distance
@@ -163,6 +220,13 @@ console.assert(
   ).answer === true
 );
 
+console.assert(
+  isPointOnSegment(
+    {x: 1, y: 0},
+    {x1: 0, y1: 0, x2: 8, y2: 0}
+  ) === true
+);
+
 const result  = segmentsIntersect(
   {x1: 3, y1: 5, x2: 3, y2: 2},
   {x1: 6, y1: 3, x2: 2, y2: 3}
@@ -174,7 +238,17 @@ console.assert(
   )
 );
 
-console.assert(run(input.example_input_1.wire_1, input.example_input_1.wire_2) == input.expected_output_1);
-console.assert(run(input.example_input_2.wire_1, input.example_input_2.wire_2) == input.expected_output_2);
-console.assert(run(input.example_input_3.wire_1, input.example_input_3.wire_2) == input.expected_output_3);
+// console.assert(run(input.example_input_1.wire_1, input.example_input_1.wire_2) == input.expected_output_1);
+// console.assert(run(input.example_input_2.wire_1, input.example_input_2.wire_2) == input.expected_output_2);
+// console.assert(run(input.example_input_3.wire_1, input.example_input_3.wire_2) == input.expected_output_3);
+// console.log(run(input.wire_1, input.wire_2));
+
+console.assert(run(input.example_input_1.wire_1, input.example_input_1.wire_2) == 30);
+console.assert(walkTo({x: 3, y: 3}, input.example_input_1.wire_1) == 20);
+console.assert(walkTo({x: 3, y: 3}, input.example_input_1.wire_2) == 20);
+console.assert(walkTo({x: 6, y: 5}, input.example_input_1.wire_1) == 15);
+console.assert(walkTo({x: 6, y: 5}, input.example_input_1.wire_2) == 15);
+
+console.assert(run(input.example_input_2.wire_1, input.example_input_2.wire_2) == 610);
+console.assert(run(input.example_input_3.wire_1, input.example_input_3.wire_2) == 410);
 console.log(run(input.wire_1, input.wire_2));
