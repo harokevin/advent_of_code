@@ -7,7 +7,7 @@ const getNextLineFromProgram = (program, startIndex) => {
   const line = program.slice(startIndex, startIndex+4);
 
   const opcode = () => {
-    if ([99,1,2,3,4].includes(line[0])) {
+    if ([99,1,2,3,4,5,6,7,8].includes(line[0])) {
       return line[0].toString();
     } else if (line[0]>9) {
       const modesAndOpcode = line[0].toString();
@@ -44,7 +44,8 @@ const getNextLineFromProgram = (program, startIndex) => {
   };
 
   const length = () => {
-    switch (opcode()) {
+    const op = opcode();
+    switch (op) {
       case 99:
       case "99":
         return 1;
@@ -54,6 +55,12 @@ const getNextLineFromProgram = (program, startIndex) => {
       case 2:
       case "2":
       case "02":
+      case 7:
+      case "7":
+      case "07":
+      case 8:
+      case "8":
+      case "08":
         return 4;
       case 3:
       case "3":
@@ -62,8 +69,15 @@ const getNextLineFromProgram = (program, startIndex) => {
       case "4":
       case "04":
         return 2;
+      case 5:
+      case "5":
+      case "05":
+      case 6:
+      case "6":
+      case "06":
+        return 3;
       default:
-        new Error(`Opcode(${opcode()}) is invalid`)
+        new Error(`Opcode(${op}) is invalid`)
     }
   }
 
@@ -75,7 +89,8 @@ const getNextLineFromProgram = (program, startIndex) => {
     input1Mode: inputModeForInput(1),
     input2Mode: inputModeForInput(2),
     writeOutIndex: writeOutIndex(),
-    length: length()
+    length: length(),
+    line
   } 
 }
 
@@ -97,6 +112,7 @@ const run = (program) => {
   }
   let startIndex = 0;
   do {
+    let startIndexAlreadySet = false;
     var currentProgram = {
       startIndex,
       opcode: undefined,
@@ -107,24 +123,22 @@ const run = (program) => {
       writeOutIndex: undefined
     };
     currentProgram = getNextLineFromProgram(programCopy, currentProgram.startIndex);
+    const input1 = getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy);
+    const input2 = getInputGivenMode(currentProgram.input2, currentProgram.input2Mode, programCopy);
     switch (currentProgram.opcode) {
       case "99":
         return programCopy;
       case "1":
       case "01":
-        programCopy[currentProgram.writeOutIndex] = 
-          getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy) +
-          getInputGivenMode(currentProgram.input2, currentProgram.input2Mode, programCopy)
+        programCopy[currentProgram.writeOutIndex] = input1 + input2;
         break;
       case "2":
       case "02":
-        programCopy[currentProgram.writeOutIndex] = 
-          getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy) *
-          getInputGivenMode(currentProgram.input2, currentProgram.input2Mode, programCopy)
+        programCopy[currentProgram.writeOutIndex] = input1 * input2;
         break;
       case "3":
       case "03":
-        programCopy[currentProgram.input1] = 1;//getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy);
+        programCopy[currentProgram.input1] = 5; //getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy);
         break;
       case "4":
       case "04":
@@ -135,10 +149,42 @@ const run = (program) => {
           output
         })}`);
         break;
+      case "5":
+      case "05":
+        if ( input1 != 0 ) {
+          startIndex = input2;
+          startIndexAlreadySet = true;
+        }
+        break;
+      case "6":
+      case "06":
+        if ( input1 == 0 ) {
+          startIndex = input2;
+          startIndexAlreadySet = true;
+        }
+        break;
+      case "7":
+      case "07":
+        if ( input1 < input2 ) {
+          programCopy[currentProgram.writeOutIndex] = 1;
+        } else {
+          programCopy[currentProgram.writeOutIndex] = 0;
+        }
+        break;
+      case "8":
+      case "08":
+        if ( input1 == input2 ) {
+          programCopy[currentProgram.writeOutIndex] = 1;
+        } else {
+          programCopy[currentProgram.writeOutIndex] = 0;
+        }
+        break;
       default:
         new Error(`Opcode(${currentProgram.opcode}) is invalid for program (${programCopy})`)
     }
-    startIndex = currentProgram.startIndex+currentProgram.length;
+    if ( !startIndexAlreadySet ) {
+      startIndex = currentProgram.startIndex+currentProgram.length;
+    }
   } while (true)
 }
 
@@ -147,22 +193,22 @@ const eq = (array1, array2) => {
     array1.every((e, index) => e === array2[index]);
 }
 
-console.log(`example_input_1: ${eq(run(IntcodePrograms.example_input_1), IntcodePrograms.expected_output_1) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_1)}] == [${IntcodePrograms.expected_output_1}]\n`);
+// console.log(`example_input_1: ${eq(run(IntcodePrograms.example_input_1), IntcodePrograms.expected_output_1) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_1)}] == [${IntcodePrograms.expected_output_1}]\n`);
 
-console.log(`example_input_2: ${eq(run(IntcodePrograms.example_input_2), IntcodePrograms.expected_output_2) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_2)}] == [${IntcodePrograms.expected_output_2}]\n`);
+// console.log(`example_input_2: ${eq(run(IntcodePrograms.example_input_2), IntcodePrograms.expected_output_2) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_2)}] == [${IntcodePrograms.expected_output_2}]\n`);
 
-console.log(`example_input_3: ${eq(run(IntcodePrograms.example_input_3), IntcodePrograms.expected_output_3) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_3)}] == [${IntcodePrograms.expected_output_3}]\n`);
+// console.log(`example_input_3: ${eq(run(IntcodePrograms.example_input_3), IntcodePrograms.expected_output_3) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_3)}] == [${IntcodePrograms.expected_output_3}]\n`);
 
-console.log(`example_input_4: ${eq(run(IntcodePrograms.example_input_4), IntcodePrograms.expected_output_4) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_4)}] == [${IntcodePrograms.expected_output_4}]\n`);
+// console.log(`example_input_4: ${eq(run(IntcodePrograms.example_input_4), IntcodePrograms.expected_output_4) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_4)}] == [${IntcodePrograms.expected_output_4}]\n`);
 
-console.log(`example_input_5: ${eq(run(IntcodePrograms.example_input_5), IntcodePrograms.expected_output_5) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_5)}] == [${IntcodePrograms.expected_output_5}]\n`);
+// console.log(`example_input_5: ${eq(run(IntcodePrograms.example_input_5), IntcodePrograms.expected_output_5) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_5)}] == [${IntcodePrograms.expected_output_5}]\n`);
 
-console.log(`example_input_6: ${eq(run(IntcodePrograms.example_input_6), IntcodePrograms.expected_output_6) ? "Passed" : "Failed"}`);
-console.log(`[${run(IntcodePrograms.example_input_6)}] == [${IntcodePrograms.expected_output_6}]\n`);
+// console.log(`example_input_6: ${eq(run(IntcodePrograms.example_input_6), IntcodePrograms.expected_output_6) ? "Passed" : "Failed"}`);
+// console.log(`[${run(IntcodePrograms.example_input_6)}] == [${IntcodePrograms.expected_output_6}]\n`);
 
 console.log(`Input: [${run(IntcodePrograms.input)}]`);
