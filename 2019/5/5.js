@@ -79,17 +79,8 @@ const getNextLineFromProgram = (program, startIndex) => {
   } 
 }
 
-const run = (program, startIndex) => {
+const run = (program) => {
   var programCopy = [...program];
-  var currentProgram = {
-    startIndex: startIndex || 0,
-    opcode: undefined,
-    input1: undefined,
-    input2: undefined,
-    input1Mode: undefined,
-    input2Mode: undefined,
-    writeOutIndex: undefined
-  };
 
   const throwModeError = () => {
     new Error(`Mode ${currentProgram.writeOutIndex} is not supported in instuction ${JSON.stringify(currentProgram)}`);
@@ -104,41 +95,51 @@ const run = (program, startIndex) => {
       throwModeError();
     }
   }
-
-  currentProgram = getNextLineFromProgram(programCopy, currentProgram.startIndex);
-  switch (currentProgram.opcode) {
-    case "99":
-      return programCopy;
-    case "1":
-    case "01":
-      programCopy[currentProgram.writeOutIndex] = 
-        getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy) +
-        getInputGivenMode(currentProgram.input2, currentProgram.input2Mode, programCopy)
-      break;
-    case "2":
-    case "02":
-      programCopy[currentProgram.writeOutIndex] = 
-        getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy) *
-        getInputGivenMode(currentProgram.input2, currentProgram.input2Mode, programCopy)
-      break;
-    case "3":
-    case "03":
-      programCopy[currentProgram.input1] = getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy);
-      break;
-    case "4":
-    case "04":
-      const output = getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy);
-      console.log(`${{
-        opcode: currentProgram.opcode, 
-        mode: currentProgram.input1Mode, 
-        output
-      }}`);
-      break;
-    default:
-      new Error(`Opcode(${currentProgram.opcode}) is invalid for program (${programCopy})`)
-  }
-  const nextStartIndex = currentProgram.startIndex+currentProgram.length;
-  return run(programCopy, nextStartIndex);
+  let startIndex = 0;
+  do {
+    var currentProgram = {
+      startIndex,
+      opcode: undefined,
+      input1: undefined,
+      input2: undefined,
+      input1Mode: undefined,
+      input2Mode: undefined,
+      writeOutIndex: undefined
+    };
+    currentProgram = getNextLineFromProgram(programCopy, currentProgram.startIndex);
+    switch (currentProgram.opcode) {
+      case "99":
+        return programCopy;
+      case "1":
+      case "01":
+        programCopy[currentProgram.writeOutIndex] = 
+          getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy) +
+          getInputGivenMode(currentProgram.input2, currentProgram.input2Mode, programCopy)
+        break;
+      case "2":
+      case "02":
+        programCopy[currentProgram.writeOutIndex] = 
+          getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy) *
+          getInputGivenMode(currentProgram.input2, currentProgram.input2Mode, programCopy)
+        break;
+      case "3":
+      case "03":
+        programCopy[currentProgram.input1] = 1;//getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy);
+        break;
+      case "4":
+      case "04":
+        const output = getInputGivenMode(currentProgram.input1, currentProgram.input1Mode, programCopy);
+        console.log(`${JSON.stringify({
+          opcode: currentProgram.opcode, 
+          mode: currentProgram.input1Mode, 
+          output
+        })}`);
+        break;
+      default:
+        new Error(`Opcode(${currentProgram.opcode}) is invalid for program (${programCopy})`)
+    }
+    startIndex = currentProgram.startIndex+currentProgram.length;
+  } while (true)
 }
 
 const eq = (array1, array2) => {
@@ -164,4 +165,4 @@ console.log(`[${run(IntcodePrograms.example_input_5)}] == [${IntcodePrograms.exp
 console.log(`example_input_6: ${eq(run(IntcodePrograms.example_input_6), IntcodePrograms.expected_output_6) ? "Passed" : "Failed"}`);
 console.log(`[${run(IntcodePrograms.example_input_6)}] == [${IntcodePrograms.expected_output_6}]\n`);
 
-console.log(`Input: [${run(IntcodePrograms.modifiedInput)}]`);
+console.log(`Input: [${run(IntcodePrograms.input)}]`);
